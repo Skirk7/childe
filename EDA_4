@@ -1,0 +1,70 @@
+# Experiment 4: Exploratory Data Analysis (EDA) & Visualization
+# Description: Visualize social media metrics using Pie, Heatmap, Histogram, Scatter, and Line plots.
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# --- Optional: Self-Made Dataset (Uncomment to use) ---
+data = {
+    'Platform': ['Instagram', 'Twitter', 'YouTube', 'Instagram', 'Twitter', 'YouTube', 'Facebook', 'Facebook'],
+    'Likes': [150, 120, 200, 180, 160, 300, 130, 140],
+   'Hour': [2, 3, 4, 5, 3, 2, 1, 6],
+    'Year': [2021, 2022, 2022, 2023, 2023, 2023, 2021, 2022] }
+df = pd.DataFrame(data)
+df.to_csv("social_media_eda.csv", index=False)
+
+# --- Step 1: Load Dataset ---
+try:
+    df = pd.read_csv("social_media_eda.csv")
+except FileNotFoundError:
+    print("Dataset not found. Please make sure 'social_media_eda.csv' is available.")
+    exit()
+
+print("Dataset Preview:")
+print(df.head())
+
+# --- PIE CHART: Distribution across platforms ---
+platform_counts = df['Platform'].value_counts()
+plt.figure(figsize=(6, 6))
+plt.pie(platform_counts, labels=platform_counts.index, autopct='%1.1f%%', startangle=90)
+plt.title("User Distribution by Platform")
+plt.axis('equal')
+plt.show()
+
+# --- HEATMAP: Likes per platform ---
+heat_data = df.pivot_table(index='Platform', columns='Likes', aggfunc='size', fill_value=0)
+plt.figure(figsize=(8, 5))
+sns.heatmap(heat_data, annot=True, cmap="YlGnBu", fmt="d")
+plt.title("Heatmap: Platform vs Likes")
+plt.show()
+
+# --- HISTOGRAM: Hourly social media usage ---
+plt.figure(figsize=(8, 5))
+sns.histplot(data=df, x='Hour', hue='Platform', multiple='stack')
+plt.title("Histogram: Hours of Usage by Platform")
+plt.xlabel("Hours")
+plt.ylabel("Frequency")
+plt.show()
+
+# --- SCATTER PLOT: Likes vs Platform ---
+plt.figure(figsize=(8, 5))
+plt.scatter(df['Likes'], df['Platform'], alpha=0.7)
+plt.title("Scatter Plot: Likes vs Platform")
+plt.xlabel("Likes")
+plt.ylabel("Platform")
+plt.show()
+
+# --- LINE CHART: Platform usage over the years ---
+yearly_counts = df.groupby(['Year', 'Platform']).size().reset_index(name='Count')
+plt.figure(figsize=(10, 6))
+for platform in yearly_counts['Platform'].unique():
+    data = yearly_counts[yearly_counts['Platform'] == platform]
+    plt.plot(data['Year'], data['Count'], label=platform)
+
+plt.title("Line Chart: Platform Usage Over Years")
+plt.xlabel("Year")
+plt.ylabel("Count")
+plt.legend()
+plt.grid(True)
+plt.show()
