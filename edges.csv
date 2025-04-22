@@ -1,0 +1,14 @@
+Source,Target,Type,Label
+Alice,Bob,Undirected,Friend
+Alice,Charlie,Undirected,Colleague
+Bob,Charlie,Undirected,Follower
+Charlie,David,Undirected,Friend
+Eve,Frank,Undirected,Colleague
+David,Eve,Undirected,Friend
+Frank,Alice,Undirected,Follower
+Alice,T-shirt,Undirected,Interest
+Bob,Jeans,Undirected,Interest
+David,Shoes,Undirected,Interest
+Charlie,Accessories,Undirected,Interest
+Eve,Bought T-shirt,Undirected,Purchased
+Frank,No purchase yet,Undirected,Purchased
