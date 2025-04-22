@@ -1,0 +1,88 @@
+# Experiment 6: Structure-Based Social Media Analytics
+# Description: Create graph-based social network & analyze centrality measures
+
+import pandas as pd
+import networkx as nx
+import matplotlib.pyplot as plt
+import random
+
+# --- Optional: Self-Made Dataset (Uncomment to use) ---
+def generate_social_network_data(num_rows=8):
+     users = ["Alice", "Bob", "Charlie", "David", "Eve", "Frank"]
+     relations = ["Friend", "Follower", "Colleague"]
+     products = ["T-shirt", "Jeans", "Dress", "Shoes", "Accessories"]
+     data = {
+         "User_A": [],
+         "User_B": [],
+         "Relation": [],
+         "Product_Interest": [],
+         "Purchase_History": []
+     }
+     for _ in range(num_rows):
+         user_a, user_b = random.sample(users, 2)
+         relation = random.choice(relations)
+         product = random.choice(products)
+         purchase = random.choice([f"Bought {product}", "No purchase yet"])
+         data["User_A"].append(user_a)
+         data["User_B"].append(user_b)
+         data["Relation"].append(relation)
+         data["Product_Interest"].append(product)
+         data["Purchase_History"].append(purchase)
+     return pd.DataFrame(data)
+
+df = generate_social_network_data()
+df.to_csv("social_network_data.csv", index=False)
+
+# --- Step 1: Load Dataset ---
+try:
+    df = pd.read_csv("social_network_data.csv")
+except FileNotFoundError:
+    print("Dataset not found. Please make sure 'social_network_data.csv' is available.")
+    exit()
+
+print("Preview of Social Media Data:")
+print(df.head())
+
+# --- Step 2: Create Graph from User Relationships ---
+G = nx.Graph()
+users = set(df['User_A']).union(set(df['User_B']))
+G.add_nodes_from(users)
+
+# Add relationship edges
+for _, row in df.iterrows():
+    G.add_edge(row['User_A'], row['User_B'], label=row['Relation'])
+
+# Add product interest and purchase edges
+for _, row in df.iterrows():
+    G.add_edge(row['User_A'], row['Product_Interest'], label='Interest')
+    G.add_edge(row['User_A'], row['Purchase_History'], label='Purchased')
+
+# --- Step 3: Centrality Measures ---
+degree = nx.degree_centrality(G)
+betweenness = nx.betweenness_centrality(G)
+closeness = nx.closeness_centrality(G)
+eigenvector = nx.eigenvector_centrality(G)
+
+centrality_df = pd.DataFrame({
+    'User': list(degree.keys()),
+    'Degree': list(degree.values()),
+    'Betweenness': list(betweenness.values()),
+    'Closeness': list(closeness.values()),
+    'Eigenvector': list(eigenvector.values())
+})
+
+print("\nCentrality Measures:")
+print(centrality_df.sort_values(by='Degree', ascending=False).head())
+
+# --- Step 4: Graph Visualization ---
+pos = nx.spring_layout(G)
+plt.figure(figsize=(12, 8))
+nx.draw_networkx_nodes(G, pos, node_size=700, node_color='skyblue')
+nx.draw_networkx_edges(G, pos, width=2, alpha=0.5)
+nx.draw_networkx_labels(G, pos, font_size=10)
+edge_labels = nx.get_edge_attributes(G, 'label')
+nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+plt.title("Graph-Based Social Network")
+plt.axis('off')
+plt.show()
+
