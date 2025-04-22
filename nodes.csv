@@ -1,0 +1,14 @@
+Id,Label,Type
+Alice,Alice,User
+Bob,Bob,User
+Charlie,Charlie,User
+David,David,User
+Eve,Eve,User
+Frank,Frank,User
+T-shirt,T-shirt,Product
+Jeans,Jeans,Product
+Shoes,Shoes,Product
+Accessories,Accessories,Product
+Bought T-shirt,Bought T-shirt,Purchase
+Bought Shoes,Bought Shoes,Purchase
+No purchase yet,No purchase yet,Purchase
