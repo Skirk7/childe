@@ -1,0 +1,108 @@
+# Experiment 5: Content-Based Social Media Analysis (Sentiment Analysis)
+# Description: Perform text preprocessing, sentiment classification, word/bigram analysis, and visualizations
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from textblob import TextBlob
+from sklearn.feature_extraction.text import CountVectorizer
+from nltk.corpus import stopwords
+from nltk.util import ngrams
+from collections import Counter
+from wordcloud import WordCloud, STOPWORDS
+import nltk
+
+# Download stopwords if not already available
+try:
+    stop_words = stopwords.words('english')
+except:
+    nltk.download('stopwords')
+    stop_words = stopwords.words('english')
+
+# --- Optional: Self-Made Dataset (Uncomment to use) ---
+data = {'Tweets': [
+     "Love the new update on Instagram!", 
+     "Twitter keeps crashing, so annoying.",
+     "Neutral about the latest Facebook changes.",
+     "Instagram stories are amazing!",
+     "Hate the new algorithm changes on Twitter."]}
+df = pd.DataFrame(data)
+df.to_csv("tweets_sample.csv", index=False)
+
+# --- Step 1: Load Dataset ---
+try:
+    df = pd.read_csv("tweets_sample.csv")
+except FileNotFoundError:
+    print("Dataset not found. Please make sure 'tweets_sample.csv' is present.")
+    exit()
+
+tweets = df.iloc[:, 0]  # assuming tweets are in the first column
+
+# --- Step 2: Sentiment Analysis ---
+def analyze_sentiment(tweet):
+    analysis = TextBlob(tweet)
+    if analysis.sentiment.polarity > 0:
+        return 'positive'
+    elif analysis.sentiment.polarity == 0:
+        return 'neutral'
+    else:
+        return 'negative'
+
+sentiments = tweets.apply(analyze_sentiment)
+df['Sentiment'] = sentiments
+
+# --- Step 3: Word Frequency (Top 10 Words) ---
+vectorizer = CountVectorizer(stop_words=stop_words)
+X = vectorizer.fit_transform(tweets)
+feature_names = vectorizer.get_feature_names_out()
+word_counts = dict(zip(feature_names, X.sum(axis=0).tolist()[0]))
+top_words = sorted(word_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+words, counts = zip(*top_words)
+
+# Bar Chart of Word Frequencies
+plt.figure(figsize=(8, 5))
+plt.bar(words, counts)
+plt.title("Top 10 Most Frequent Words")
+plt.xlabel("Words")
+plt.ylabel("Frequency")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+# --- Step 4: Bigrams (Top 8) ---
+def count_bigrams(text_series):
+    all_bigrams = Counter()
+    for tweet in text_series:
+        words = [word for word in tweet.lower().split() if word.isalnum() and word not in stop_words]
+        bigrams = list(ngrams(words, 2))
+        all_bigrams.update(bigrams)
+    return all_bigrams
+
+top_bigrams = count_bigrams(tweets).most_common(8)
+bigram_labels, bigram_counts = zip(*[(f"{a} {b}", c) for (a, b), c in top_bigrams])
+
+plt.figure(figsize=(8, 5))
+plt.bar(bigram_labels, bigram_counts)
+plt.title("Top 8 Bigrams in Tweets")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+# --- Step 5: Pie Chart for Sentiment Distribution ---
+sentiment_counts = df['Sentiment'].value_counts()
+plt.figure(figsize=(6, 6))
+plt.pie(sentiment_counts, labels=sentiment_counts.index, autopct='%1.1f%%', startangle=90)
+plt.title("Sentiment Distribution")
+plt.axis('equal')
+plt.show()
+
+# --- Step 6: Word Clouds for Each Sentiment ---
+for sentiment in ['positive', 'negative', 'neutral']:
+    text = ' '.join(df[df['Sentiment'] == sentiment]['Tweets'].astype(str))
+    if text:
+        wordcloud = WordCloud(width=800, height=400, background_color='white', stopwords=set(STOPWORDS)).generate(text)
+        plt.figure(figsize=(8, 6))
+        plt.imshow(wordcloud, interpolation='bilinear')
+        plt.axis("off")
+        plt.title(f"Word Cloud for {sentiment.capitalize()} Tweets")
+        plt.tight_layout()
+        plt.show()
