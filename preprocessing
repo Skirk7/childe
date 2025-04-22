@@ -1,1 +1,59 @@
+# Experiment 3: Data Cleaning & Storage for Social Media Data
+# Description: Handle missing values, duplicates, outliers, and unnecessary columns
+
+import pandas as pd
+
+# --- Optional: Self-Made Dataset (Uncomment to use) ---
+# data = {
+#     'user_id': [1, 2, 3, 4, 4, 5, 6, 7],
+#     'game_title': ['A', 'B', 'C', 'D', 'D', 'E', 'F', 'G'],
+#     'behavior_name': ['play', 'purchase', 'play', 'purchase', 'purchase', 'play', 'play', 'play'],
+#     'value': [5, 1, 100, 1, 1, 120, 4, 3],
+#     'x': [None] * 8  # Optional unnecessary column
+# }
+# df = pd.DataFrame(data)
+# df.to_csv('steam_sample.csv', index=False)
+
+# --- Step 1: Load Dataset ---
+try:
+    df = pd.read_csv("steam_sample.csv")
+except FileNotFoundError:
+    print("Dataset not found. Please make sure 'steam_sample.csv' is present.")
+    exit()
+
+print("Original Dataset Preview:")
+print(df.head())
+
+# --- Step 2: Remove Duplicates ---
+df_no_duplicates = df.drop_duplicates()
+print("\nAfter Removing Duplicates:")
+print(df_no_duplicates.head())
+
+# --- Step 3: Handle Missing Values ---
+for col in df_no_duplicates.columns:
+    if pd.api.types.is_numeric_dtype(df_no_duplicates[col]):
+        df_no_duplicates[col].fillna(df_no_duplicates[col].mean(), inplace=True)
+    else:
+        df_no_duplicates[col].fillna(df_no_duplicates[col].mode()[0], inplace=True)
+
+print("\nAfter Handling Missing Values:")
+print(df_no_duplicates.head())
+
+# --- Step 4: Handle Outliers in 'value' column ---
+Q1 = df_no_duplicates['value'].quantile(0.25)
+Q3 = df_no_duplicates['value'].quantile(0.75)
+IQR = Q3 - Q1
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+df_no_outliers = df_no_duplicates[(df_no_duplicates['value'] >= lower_bound) & (df_no_duplicates['value'] <= upper_bound)]
+
+print("\nAfter Removing Outliers:")
+print(df_no_outliers.head())
+
+# --- Step 5: Drop Unnecessary Columns (e.g., 'x') ---
+if 'x' in df_no_outliers.columns:
+    df_no_outliers = df_no_outliers.drop(columns=['x'])
+
+print("\nFinal Cleaned Dataset:")
+print(df_no_outliers.head())
 
